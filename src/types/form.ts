@@ -4,6 +4,8 @@ export interface ValidationRule {
   max?: number;
   pattern?: string;
   message?: string;
+  custom?: string; // Common validation type
+  trigger?: 'onBlur' | 'onChange' | 'onInput'; // 校验触发时机
 }
 
 export interface InputConfig {

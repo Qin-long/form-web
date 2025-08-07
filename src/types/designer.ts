@@ -5,7 +5,7 @@ export interface ValidationRule {
   pattern?: string;
   message?: string;
   custom?: string; // 常用校验类型
-  trigger?: string; // 校验触发时机
+  trigger?: 'onBlur' | 'onChange' | 'onInput'; // 校验触发时机
 }
 
 export interface InputConfig {
