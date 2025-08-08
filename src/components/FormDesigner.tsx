@@ -106,6 +106,7 @@ const FormDesigner: React.FC<FormDesignerProps> = ({
     const newField: DesignerField = {
       id: generateId(),
       ...component.defaultConfig,
+      name: `${component.defaultConfig.name}_${Date.now()}`, // 确保name也是唯一的
       width: component.defaultConfig.width || 300,
       height: component.defaultConfig.height || 32,
     };
@@ -182,9 +183,9 @@ const FormDesigner: React.FC<FormDesignerProps> = ({
           // 只保存optionsPreset，不保存options字段
           if ('optionsPreset' in field) {
             const { options, ...rest } = field;
-            return { ...rest };
+            return { ...rest, id }; // 保留id字段
           }
-          return field;
+          return { ...field, id }; // 保留id字段
         }),
         layout: 'vertical',
         responsive: true,
@@ -213,9 +214,9 @@ const FormDesigner: React.FC<FormDesignerProps> = ({
       fields: fields.map(({ id, ...field }) => {
         if ('optionsPreset' in field) {
           const { options, ...rest } = field;
-          return { ...rest };
+          return { ...rest, id }; // 保留id字段
         }
-        return field;
+        return { ...field, id }; // 保留id字段
       }),
       layout: 'vertical',
       responsive: true,
@@ -314,9 +315,9 @@ const FormDesigner: React.FC<FormDesignerProps> = ({
         fields: fields.map(({ id, ...field }) => {
           if ('optionsPreset' in field) {
             const { options, ...rest } = field;
-            return { ...rest };
+            return { ...rest, id }; // 保留id字段
           }
-          return field;
+          return { ...field, id }; // 保留id字段
         }),
         layout: 'vertical',
         responsive: true,
@@ -386,7 +387,7 @@ const FormDesigner: React.FC<FormDesignerProps> = ({
           <DynamicForm
             config={{
               title: formTitle,
-              fields: fields.map(({ id, ...field }) => ({ ...field, id })),
+              fields: fields.map(({ id, ...field }) => ({ ...field, id })), // 保留id字段
               layout: 'vertical',
               responsive: true,
             }}
@@ -395,16 +396,22 @@ const FormDesigner: React.FC<FormDesignerProps> = ({
               const formDataKey = `formData_${formTitle}_${Date.now()}`;
               const formData = {
                 id: formDataKey,
+                formId: `designer_form_${Date.now()}`, // 设计器预览的表单ID
                 formTitle,
                 data,
-                submitTime: new Date().toISOString(),
                 config: {
                   title: formTitle,
-                  fields: fields.map(({ id, ...field }) => ({ ...field, id })),
-                }
+                  fields: fields.map(({ id, ...field }) => ({ ...field, id })), // 保留id字段
+                },
+                submitTime: new Date().toISOString(),
               };
               
-              // 获取已保存的表单数据
+              // 保存到formSubmissions，与FormFiller保持一致
+              const submissions = JSON.parse(localStorage.getItem('formSubmissions') || '[]');
+              submissions.push(formData);
+              localStorage.setItem('formSubmissions', JSON.stringify(submissions));
+              
+              // 同时保存到formDataList（向后兼容）
               const savedFormData = JSON.parse(localStorage.getItem('formDataList') || '[]');
               savedFormData.push(formData);
               localStorage.setItem('formDataList', JSON.stringify(savedFormData));

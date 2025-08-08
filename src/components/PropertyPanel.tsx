@@ -230,6 +230,15 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
         size="small"
         onValuesChange={handleValuesChange}
       >
+        {/* 字段ID显示（只读） */}
+        <Form.Item label="字段ID" style={{ marginBottom: 16 }}>
+          <Input
+            value={selectedField.id}
+            readOnly
+            style={{ fontFamily: 'monospace', fontSize: '12px' }}
+          />
+        </Form.Item>
+
         {/* 基本属性配置 */}
         <Form.Item label="字段名称" name="name">
           <Input placeholder="请输入字段名称" />

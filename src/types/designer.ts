@@ -56,7 +56,7 @@ export interface SavedConfig {
   config: {
     title: string;
     fields: Omit<DesignerField, 'id'>[];
-    layout: string;
+    layout: 'horizontal' | 'vertical' | 'inline';
     responsive: boolean;
   };
   createTime: string;

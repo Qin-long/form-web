@@ -38,7 +38,7 @@ const PRESET_OPTIONS_MAP: Record<string, any> = {
  * @returns Zod校验模式
  */
 export const createZodSchema = (field: any) => {
-  let schema = z.any();
+  let schema: any = z.any();
 
   // 必填校验
   schema = schema.refine((val: any) => val !== undefined && val !== null && val !== '', {
@@ -79,6 +79,7 @@ interface FormFieldProps {
   onChange?: (value: any) => void; // 值变化回调
   onBlur?: (value: any) => void;   // 失焦回调
   error?: string;                 // 错误信息
+  readOnly?: boolean;             // 只读模式
 }
 
 /**
@@ -86,7 +87,7 @@ interface FormFieldProps {
  * 根据字段类型渲染对应的表单控件
  * 支持自定义校验触发时机和空格自动去除
  */
-const FormField: React.FC<FormFieldProps> = ({ field, value, onChange, onBlur, error }) => {
+const FormField: React.FC<FormFieldProps> = ({ field, value, onChange, onBlur, error, readOnly = false }) => {
   // 动态获取选项数据
   // 如果配置了预设类型，则使用预设数据；否则使用自定义选项
   let options = field.options;

@@ -38,6 +38,7 @@ export interface FormField {
   ratingConfig?: RatingConfig;
   uploadConfig?: UploadConfig;
   options?: Array<{ label: string; value: string | number }>;
+  optionsPreset?: string; // 预设选项类型
   defaultValue?: any;
 }
 

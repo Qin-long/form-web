@@ -13,6 +13,7 @@ interface DynamicFormProps {
   onCancel?: () => void;                 // 取消回调
   initialValues?: FormData;              // 初始值
   loading?: boolean;                     // 加载状态
+  readOnly?: boolean;                    // 只读模式（预览）
 }
 
 // 与DesignCanvas保持一致的常量
@@ -88,6 +89,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   onCancel,
   initialValues = {},
   loading = false,
+  readOnly = false,
 }) => {
   const [form] = Form.useForm();
   const [errors, setErrors] = useState<Record<string, string[]>>({});
@@ -100,13 +102,13 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     const defaultValues: FormData = {};
     config.fields.forEach((field) => {
       if (field.defaultValue !== undefined) {
-        defaultValues[field.name] = field.defaultValue;
+        defaultValues[field.id] = field.defaultValue; // 使用field.id而不是field.name
       }
     });
     const mergedValues = { ...defaultValues, ...initialValues };
     form.setFieldsValue(mergedValues);
     // 只依赖字段名和初始值，避免死循环
-  }, [config.fields.map(f => f.name).join(','), JSON.stringify(initialValues)]);
+  }, [config.fields.map(f => f.id).join(','), JSON.stringify(initialValues)]); // 使用field.id
 
   /**
    * 表单提交处理
@@ -132,12 +134,27 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   };
 
   return (
-    <Card title={config.title} style={{ maxWidth: CANVAS_MAX_WIDTH, margin: '0 auto' }}>
+    <div style={{ width: '100%', height: '100%' }}>
+      {/* 可选的表单标题 */}
+      {config.title && (
+        <div style={{ 
+          textAlign: 'center', 
+          marginBottom: '24px',
+          fontSize: '20px',
+          fontWeight: '500',
+          color: '#333',
+          padding: '20px 20px 0 20px'
+        }}>
+          {config.title}
+        </div>
+      )}
+      
       <Form
         form={form}
         layout="vertical"
         onFinish={handleSubmit}
         initialValues={initialValues}
+        style={{ padding: '20px' }}
       >
         {/* 使用与DesignCanvas相同的栅格布局容器 */}
         <div
@@ -156,7 +173,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             
             return (
               <div
-                key={field.name}
+                key={field.id}
                 style={{
                   flex: `0 0 ${colPercent}%`,
                   width: `${colPercent}%`,
@@ -168,7 +185,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               >
                 <Form.Item
                   label={field.label}
-                  name={field.name}
+                  name={field.id}
                   required={field.validation?.required}
                   style={{ marginBottom: 0 }}
                   rules={getAntdRules(field)}
@@ -180,6 +197,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                 >
                   <FormField
                     field={field}
+                    readOnly={readOnly}
                   />
                 </Form.Item>
               </div>
@@ -188,19 +206,21 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         </div>
 
         {/* 表单操作按钮 */}
-        <Form.Item style={{ marginTop: 24, textAlign: 'center' }}>
-          <Space>
-            <Button type="primary" htmlType="submit" loading={loading}>
-              提交
-            </Button>
-            <Button onClick={handleReset}>重置</Button>
-            {onCancel && (
-              <Button onClick={onCancel}>取消</Button>
-            )}
-          </Space>
-        </Form.Item>
+        {!readOnly && (
+          <Form.Item style={{ marginTop: 24, textAlign: 'center' }}>
+            <Space>
+              <Button type="primary" htmlType="submit" loading={loading}>
+                提交
+              </Button>
+              <Button onClick={handleReset}>重置</Button>
+              {onCancel && (
+                <Button onClick={onCancel}>取消</Button>
+              )}
+            </Space>
+          </Form.Item>
+        )}
       </Form>
-    </Card>
+    </div>
   );
 };
 
