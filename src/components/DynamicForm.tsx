@@ -29,9 +29,18 @@ function getAntdRules(field: any) {
   
   // 必填校验
   if (field.validation?.required) {
+    // 根据组件类型设置不同的必填提示
+    let defaultMessage = `${field.label}为必填项`;
+    
+    if (field.type === 'select' || field.type === 'radio' || field.type === 'checkbox' || field.type === 'cascader') {
+      defaultMessage = `${field.label}为必选项`;
+    } else if (field.type === 'upload') {
+      defaultMessage = `${field.label}为必须上传`;
+    }
+    
     rules.push({ 
       required: true, 
-      message: field.validation?.message || `${field.label}为必填项` 
+      message: field.validation?.message || defaultMessage
     });
   }
   

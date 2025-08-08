@@ -1,20 +1,35 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Layout, Button, Space, Modal, Input, message, Tabs, Card } from 'antd';
-import { SaveOutlined, DownloadOutlined, UploadOutlined } from '@ant-design/icons';
+import { SaveOutlined, DownloadOutlined, UploadOutlined, ShareAltOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import ComponentPanel from './ComponentPanel';
 import DesignCanvas from './DesignCanvas';
 import PropertyPanel from './PropertyPanel';
 import DynamicForm from './DynamicForm';
 import type { DesignerField, SavedConfig } from '../types/designer';
 import type { ComponentItem } from '../types/designer';
+import type { FormConfig } from '../types/form';
 
 const { Sider, Content } = Layout;
+
+/**
+ * FormDesigner组件属性接口
+ */
+interface FormDesignerProps {
+  initialConfig?: FormConfig;                                    // 初始配置（编辑模式）
+  onConfigUpdate?: (config: FormConfig) => void;                // 配置更新回调
+  isEditMode?: boolean;                                         // 是否为编辑模式
+}
 
 /**
  * 表单设计器主组件
  * 提供拖拽式表单设计功能，包括组件库、设计画布、属性配置、预览和数据管理
  */
-const FormDesigner: React.FC = () => {
+const FormDesigner: React.FC<FormDesignerProps> = ({ 
+  initialConfig, 
+  onConfigUpdate, 
+  isEditMode = false 
+}) => {
   // 状态管理
   const [fields, setFields] = useState<DesignerField[]>([]);           // 表单字段列表
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null); // 当前选中的字段ID
@@ -23,9 +38,59 @@ const FormDesigner: React.FC = () => {
   const [configName, setConfigName] = useState('');                    // 配置名称
   const [dataModalVisible, setDataModalVisible] = useState(false);     // 查看数据弹窗显示状态
   const [savedFormData, setSavedFormData] = useState<any[]>([]);       // 已保存的表单数据
+  const [publishModalVisible, setPublishModalVisible] = useState(false); // 发布弹窗显示状态
+  const [publishName, setPublishName] = useState('');                  // 发布名称
+
+  const navigate = useNavigate();
+  const initializedRef = useRef(false); // 跟踪是否已初始化
 
   // 当前选中的字段
   const selectedField = fields.find(field => field.id === selectedFieldId) || null;
+
+  /**
+   * 初始化编辑模式
+   */
+  useEffect(() => {
+    if (isEditMode && initialConfig && !initializedRef.current) {
+      setFormTitle(initialConfig.title || '我的表单');
+      // 将FormConfig的fields转换为DesignerField格式
+      const designerFields: DesignerField[] = initialConfig.fields.map((field, index) => {
+        const { id, ...fieldWithoutId } = field;
+        return {
+          id: `field_${Date.now()}_${index}`,
+          ...fieldWithoutId,
+          width: field.width || 300,
+          height: field.height || 32,
+        };
+      });
+      setFields(designerFields);
+      initializedRef.current = true;
+    }
+  }, [isEditMode, initialConfig]);
+
+  /**
+   * 监听配置变化，通知父组件
+   */
+  useEffect(() => {
+    if (isEditMode && onConfigUpdate && fields.length > 0 && initializedRef.current) {
+      const currentConfig: FormConfig = {
+        title: formTitle,
+        fields: fields.map(({ id, ...field }) => ({ ...field, id })),
+        layout: 'vertical',
+        responsive: true,
+      };
+      onConfigUpdate(currentConfig);
+    }
+  }, [fields, formTitle, isEditMode, onConfigUpdate]);
+
+  /**
+   * 清理初始化状态
+   */
+  useEffect(() => {
+    if (!isEditMode) {
+      initializedRef.current = false;
+    }
+  }, [isEditMode]);
 
   /**
    * 生成唯一ID
@@ -222,6 +287,60 @@ const FormDesigner: React.FC = () => {
     message.success('数据已清空');
   };
 
+  /**
+   * 发布表单
+   * 将当前表单配置发布，生成分享链接
+   */
+  const handlePublish = () => {
+    if (!publishName.trim()) {
+      message.error('请输入发布名称');
+      return;
+    }
+
+    if (fields.length === 0) {
+      message.error('请先设计表单内容');
+      return;
+    }
+
+    // 创建发布表单数据
+    const formId = `published_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const publishedForm = {
+      id: formId,
+      configId: `config_${Date.now()}`,
+      name: publishName,
+      title: formTitle,
+      config: {
+        title: formTitle,
+        fields: fields.map(({ id, ...field }) => {
+          if ('optionsPreset' in field) {
+            const { options, ...rest } = field;
+            return { ...rest };
+          }
+          return field;
+        }),
+        layout: 'vertical',
+        responsive: true,
+      },
+      publishTime: new Date().toISOString(),
+      accessCount: 0,
+      submitCount: 0,
+      isActive: true,
+      shareUrl: `${window.location.origin}/form/${formId}`,
+    };
+
+    // 保存到已发布表单列表
+    const publishedForms = JSON.parse(localStorage.getItem('publishedForms') || '[]');
+    publishedForms.push(publishedForm);
+    localStorage.setItem('publishedForms', JSON.stringify(publishedForms));
+
+    setPublishModalVisible(false);
+    setPublishName('');
+    message.success('表单发布成功！');
+    
+    // 跳转到发布管理页面
+    navigate('/publish');
+  };
+
   // 标签页配置
   const items = [
     {
@@ -319,21 +438,28 @@ const FormDesigner: React.FC = () => {
           />
         </div>
         <Space>
-          <Button icon={<SaveOutlined />} onClick={() => setSaveModalVisible(true)}>
-            保存配置
-          </Button>
-          <Button icon={<DownloadOutlined />} onClick={handleExport}>
-            导出配置
-          </Button>
-          <Button icon={<UploadOutlined />} onClick={handleImport}>
-            导入配置
-          </Button>
-          <Button onClick={handleViewData}>
-            查看数据
-          </Button>
-          <Button onClick={handleClearData}>
-            清空数据
-          </Button>
+          {!isEditMode && (
+            <>
+              <Button icon={<SaveOutlined />} onClick={() => setSaveModalVisible(true)}>
+                保存配置
+              </Button>
+              <Button icon={<DownloadOutlined />} onClick={handleExport}>
+                导出配置
+              </Button>
+              <Button icon={<UploadOutlined />} onClick={handleImport}>
+                导入配置
+              </Button>
+              <Button icon={<ShareAltOutlined />} onClick={() => setPublishModalVisible(true)}>
+                发布
+              </Button>
+              <Button onClick={handleViewData}>
+                查看数据
+              </Button>
+              <Button onClick={handleClearData}>
+                清空数据
+              </Button>
+            </>
+          )}
         </Space>
       </div>
 
@@ -415,6 +541,34 @@ const FormDesigner: React.FC = () => {
             ))}
           </div>
         )}
+      </Modal>
+
+      {/* 发布弹窗 */}
+      <Modal
+        title="发布表单"
+        open={publishModalVisible}
+        onOk={handlePublish}
+        onCancel={() => {
+          setPublishModalVisible(false);
+          setPublishName('');
+        }}
+        okText="发布"
+        cancelText="取消"
+      >
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 8 }}>表单标题：</div>
+          <div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: '4px' }}>
+            {formTitle || '未设置标题'}
+          </div>
+        </div>
+        <div>
+          <div style={{ marginBottom: 8 }}>发布名称：</div>
+          <Input
+            placeholder="请输入发布名称"
+            value={publishName}
+            onChange={(e) => setPublishName(e.target.value)}
+          />
+        </div>
       </Modal>
     </div>
   );

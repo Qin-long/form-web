@@ -211,7 +211,7 @@ export const componentLibrary: ComponentItem[] = [
       label: '图片上传',
       uploadConfig: {
         accept: 'image/*',
-        maxSize: 3 * 1024 * 1024,
+        maxSize: 3,
         maxCount: 1,
       },
       inputConfig: {
@@ -225,20 +225,21 @@ export const componentLibrary: ComponentItem[] = [
 
   // 高级组件
   {
-    id: 'name',
-    type: 'name',
+    id: 'input',
+    type: 'input',
     name: '姓名',
     icon: '👤',
     category: 'advanced',
     defaultConfig: {
-      type: 'name',
-      name: 'name',
+      type: 'input',
+      name: 'input',
       label: '姓名',
       placeholder: '请输入姓名',
       validation: {
         required: true,
         custom: 'chinese_name',
-        message: '请输入2-4位中文姓名',
+        pattern: '^[一-龥]{2,4}$',
+        message: '请输入2-4位中文姓名'
       },
       inputConfig: {
         widthPercent: 100,
@@ -259,6 +260,7 @@ export const componentLibrary: ComponentItem[] = [
       validation: {
         required: true,
         custom: 'phone',
+        pattern: '^1[3-9]\\d{9}$',
         message: '请输入正确的手机号',
       },
       inputConfig: {
