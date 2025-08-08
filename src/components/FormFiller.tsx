@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Button, message, Result, Spin } from 'antd';
-import { CheckCircleOutlined, LoadingOutlined } from '@ant-design/icons';
+import { Button, message, Result, Spin, Modal, Input } from 'antd';
+import { CheckCircleOutlined, LoadingOutlined, EditOutlined } from '@ant-design/icons';
 import DynamicForm from './DynamicForm';
+import FormDesigner from './FormDesigner';
 import type { FormConfig, FormData } from '../types/form';
 
 /**
@@ -15,6 +16,11 @@ const FormFiller: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [formId, setFormId] = useState<string>('');
   const [initialValues, setInitialValues] = useState<FormData>({});
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [saveModalVisible, setSaveModalVisible] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const [originalFormConfig, setOriginalFormConfig] = useState<FormConfig | null>(null);
   const { formId: routeFormId } = useParams<{ formId: string }>();
   const [searchParams] = useSearchParams();
   
@@ -54,7 +60,15 @@ const FormFiller: React.FC = () => {
       );
 
       if (publishedForm) {
-        setFormConfig(publishedForm.config);
+        // 确保表单配置包含所有必要字段
+        const config = {
+          ...publishedForm.config,
+          fields: publishedForm.config.fields.map((field: any, index: number) => ({
+            ...field,
+            id: field.id || `field_${Date.now()}_${index}`, // 确保每个字段都有id
+          }))
+        };
+        setFormConfig(config);
         
         // 更新访问次数
         updateAccessCount(publishedForm.id);
@@ -79,7 +93,14 @@ const FormFiller: React.FC = () => {
       if (submission) {
         // 优先使用提交数据中的表单配置
         if (submission.config) {
-          setFormConfig(submission.config);
+          const config = {
+            ...submission.config,
+            fields: submission.config.fields.map((field: any, index: number) => ({
+              ...field,
+              id: field.id || `field_${Date.now()}_${index}`, // 确保每个字段都有id
+            }))
+          };
+          setFormConfig(config);
           setInitialValues(submission.data);
         } else {
           // 如果没有配置，尝试通过formId加载表单配置
@@ -87,7 +108,14 @@ const FormFiller: React.FC = () => {
           const publishedForm = publishedForms.find((form: any) => form.id === submission.formId);
           
           if (publishedForm) {
-            setFormConfig(publishedForm.config);
+            const config = {
+              ...publishedForm.config,
+              fields: publishedForm.config.fields.map((field: any, index: number) => ({
+                ...field,
+                id: field.id || `field_${Date.now()}_${index}`, // 确保每个字段都有id
+              }))
+            };
+            setFormConfig(config);
             setInitialValues(submission.data);
           } else {
             message.error('表单配置不存在');
@@ -188,6 +216,97 @@ const FormFiller: React.FC = () => {
     }
   };
 
+  /**
+   * 进入编辑模式
+   */
+  const handleEdit = () => {
+    if (formConfig) {
+      setOriginalFormConfig(formConfig);
+      setIsEditMode(true);
+      setEditModalVisible(true);
+    }
+  };
+
+  /**
+   * 退出编辑模式
+   */
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setEditModalVisible(false);
+    if (originalFormConfig) {
+      setFormConfig(originalFormConfig);
+    }
+  };
+
+  /**
+   * 保存编辑后的表单
+   */
+  const handleSaveEdit = () => {
+    try {
+      // 直接更新已发布的表单，不创建新配置
+      const publishedForms = JSON.parse(localStorage.getItem('publishedForms') || '[]');
+      const updatedForms = publishedForms.map((form: any) => {
+        if (form.id === formId) {
+          return { ...form, config: formConfig };
+        }
+        return form;
+      });
+      localStorage.setItem('publishedForms', JSON.stringify(updatedForms));
+
+      setIsEditMode(false);
+      setEditModalVisible(false);
+      message.success('表单保存成功！');
+    } catch (error) {
+      message.error('保存失败，请重试');
+    }
+  };
+
+  /**
+   * 保存为新配置
+   */
+  const handleSaveAs = () => {
+    if (!saveName.trim()) {
+      message.error('请输入配置名称');
+      return;
+    }
+
+    try {
+      // 保存到表单配置列表
+      const savedConfig = {
+        id: `config_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: saveName,
+        config: formConfig,
+        createTime: new Date().toISOString(),
+        updateTime: new Date().toISOString(),
+      };
+
+      const savedConfigs = JSON.parse(localStorage.getItem('formConfigs') || '[]');
+      savedConfigs.push(savedConfig);
+      localStorage.setItem('formConfigs', JSON.stringify(savedConfigs));
+
+      setSaveModalVisible(false);
+      setSaveName('');
+      setIsEditMode(false);
+      setEditModalVisible(false);
+      message.success('表单已保存为新配置！');
+    } catch (error) {
+      message.error('保存失败，请重试');
+    }
+  };
+
+  /**
+   * 处理表单设计器的字段更新
+   */
+  const handleFormUpdate = (updatedConfig: FormConfig) => {
+    // 避免无限循环：只有当配置真正发生变化时才更新
+    const currentConfigStr = JSON.stringify(formConfig);
+    const updatedConfigStr = JSON.stringify(updatedConfig);
+    
+    if (currentConfigStr !== updatedConfigStr) {
+      setFormConfig(updatedConfig);
+    }
+  };
+
   // 加载状态
   if (loading) {
     return (
@@ -260,6 +379,25 @@ const FormFiller: React.FC = () => {
   // 表单填写页面：仅显示表单内容，无其他UI
   return (
     <div className="form-filler-page">
+      {/* 编辑按钮 - 在预览模式下显示 */}
+      {isPreview && (
+        <div style={{ 
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          zIndex: 1000
+        }}>
+          <Button 
+            type="primary" 
+            icon={<EditOutlined />} 
+            onClick={handleEdit}
+            size="small"
+          >
+            编辑表单
+          </Button>
+        </div>
+      )}
+      
       <div className="form-filler-content">
         <DynamicForm
           config={{
@@ -270,8 +408,65 @@ const FormFiller: React.FC = () => {
           onSubmit={handleSubmit}
           onCancel={handleBack}
           readOnly={isPreview}
+          hideSubmit={isPreview} // 预览模式隐藏提交按钮
         />
       </div>
+
+      {/* 编辑模式弹窗 */}
+      <Modal
+        title="编辑表单"
+        open={editModalVisible}
+        onCancel={handleCancelEdit}
+        footer={[
+          <Button key="cancel" onClick={handleCancelEdit}>
+            取消
+          </Button>,
+          <Button key="save" type="primary" onClick={handleSaveEdit}>
+            保存
+          </Button>,
+          <Button key="saveAs" onClick={() => setSaveModalVisible(true)}>
+            保存为新配置
+          </Button>
+        ]}
+        width="90%"
+        style={{ top: 20 }}
+        bodyStyle={{ height: 'calc(100vh - 200px)', overflow: 'auto' }}
+      >
+        {formConfig && (
+          <FormDesigner 
+            initialConfig={{
+              title: formConfig.title,
+              fields: formConfig.fields, // 直接使用原始字段，包含id
+              layout: formConfig.layout,
+              responsive: formConfig.responsive,
+            }}
+            onConfigUpdate={handleFormUpdate}
+            isEditMode={true}
+          />
+        )}
+      </Modal>
+
+      {/* 保存配置弹窗 */}
+      <Modal
+        title="保存表单配置"
+        open={saveModalVisible}
+        onOk={handleSaveAs}
+        onCancel={() => {
+          setSaveModalVisible(false);
+          setSaveName('');
+        }}
+        okText="保存"
+        cancelText="取消"
+      >
+        <div>
+          <div style={{ marginBottom: 8 }}>配置名称：</div>
+          <Input
+            placeholder="请输入配置名称"
+            value={saveName}
+            onChange={(e) => setSaveName(e.target.value)}
+          />
+        </div>
+      </Modal>
     </div>
   );
 };

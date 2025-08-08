@@ -55,7 +55,7 @@ export interface SavedConfig {
   name: string;
   config: {
     title: string;
-    fields: Omit<DesignerField, 'id'>[];
+    fields: DesignerField[]; // 改为包含id的完整字段
     layout: 'horizontal' | 'vertical' | 'inline';
     responsive: boolean;
   };

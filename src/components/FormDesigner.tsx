@@ -53,12 +53,11 @@ const FormDesigner: React.FC<FormDesignerProps> = ({
   useEffect(() => {
     if (isEditMode && initialConfig && !initializedRef.current) {
       setFormTitle(initialConfig.title || '我的表单');
-      // 将FormConfig的fields转换为DesignerField格式
-      const designerFields: DesignerField[] = initialConfig.fields.map((field, index) => {
-        const { id, ...fieldWithoutId } = field;
+      // 将FormConfig的fields转换为DesignerField格式，保留原始ID
+      const designerFields: DesignerField[] = initialConfig.fields.map((field) => {
         return {
-          id: `field_${Date.now()}_${index}`,
-          ...fieldWithoutId,
+          ...field,
+          id: field.id || `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // 保留原始ID，如果没有则生成
           width: field.width || 300,
           height: field.height || 32,
         };

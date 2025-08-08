@@ -14,6 +14,7 @@ interface DynamicFormProps {
   initialValues?: FormData;              // 初始值
   loading?: boolean;                     // 加载状态
   readOnly?: boolean;                    // 只读模式（预览）
+  hideSubmit?: boolean;                  // 隐藏提交按钮
 }
 
 // 与DesignCanvas保持一致的常量
@@ -90,6 +91,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   initialValues = {},
   loading = false,
   readOnly = false,
+  hideSubmit = false,
 }) => {
   const [form] = Form.useForm();
   const [errors, setErrors] = useState<Record<string, string[]>>({});
@@ -209,9 +211,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         {!readOnly && (
           <Form.Item style={{ marginTop: 24, textAlign: 'center' }}>
             <Space>
-              <Button type="primary" htmlType="submit" loading={loading}>
-                提交
-              </Button>
+              {!hideSubmit && (
+                <Button type="primary" htmlType="submit" loading={loading}>
+                  提交
+                </Button>
+              )}
               <Button onClick={handleReset}>重置</Button>
               {onCancel && (
                 <Button onClick={onCancel}>取消</Button>

@@ -111,13 +111,15 @@ const FormPublisher: React.FC = () => {
    * 查看表单
    */
   const handleViewForm = (form: PublishedForm) => {
-    window.open(form.shareUrl, '_blank');
+    // 查看表单：跳转到预览模式
+    window.open(`${window.location.origin}/form/${form.id}?preview=true`, '_blank');
   };
 
   /**
    * 填写表单
    */
   const handleFillForm = (form: PublishedForm) => {
+    // 填写表单：跳转到正常填写模式
     window.open(`${window.location.origin}/form/${form.id}`, '_blank');
   };
 
@@ -194,7 +196,7 @@ const FormPublisher: React.FC = () => {
         ...editingConfig,
         config: {
           title: updatedConfig.title,
-          fields: updatedConfig.fields.map(({ id, ...field }) => field), // 移除id字段，因为SavedConfig不保存id
+          fields: updatedConfig.fields, // 保留完整的字段信息，包括id
           layout: (updatedConfig.layout as 'horizontal' | 'vertical' | 'inline') || 'vertical',
           responsive: updatedConfig.responsive !== undefined ? updatedConfig.responsive : true,
         },
@@ -519,10 +521,7 @@ const FormPublisher: React.FC = () => {
             <FormDesigner 
               initialConfig={{
                 title: editingConfig.config.title,
-                fields: editingConfig.config.fields.map((field, index) => ({
-                  ...field,
-                  id: `field_${Date.now()}_${index}`, // 重新生成id
-                })),
+                fields: editingConfig.config.fields, // 直接使用原始字段，包含id
                 layout: editingConfig.config.layout,
                 responsive: editingConfig.config.responsive,
               }}
