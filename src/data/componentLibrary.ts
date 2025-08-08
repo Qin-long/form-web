@@ -13,8 +13,14 @@ export const componentLibrary: ComponentItem[] = [
       name: 'input',
       label: '输入框',
       placeholder: '请输入',
+      span: 24,
       inputConfig: {
         widthPercent: 100,
+      },
+      validation: {
+        required: true,
+        min: 1,
+        max: 10,
       },
     },
   },
@@ -32,6 +38,12 @@ export const componentLibrary: ComponentItem[] = [
       height: 4,
       inputConfig: {
         widthPercent: 100,
+      },
+      span: 24,
+      validation: {
+        required: true,
+        min: 1,
+        max: 300,
       },
     },
   },
@@ -86,6 +98,7 @@ export const componentLibrary: ComponentItem[] = [
       name: 'select',
       label: '下拉选择',
       placeholder: '请选择',
+      span: 24,
       options: [
         { label: '选项1', value: 'option1' },
         { label: '选项2', value: 'option2' },
@@ -105,8 +118,9 @@ export const componentLibrary: ComponentItem[] = [
     defaultConfig: {
       type: 'cascader',
       name: 'cascader',
+      span: 24,
       label: '级联选择',
-      placeholder: '请选择省市区',
+      placeholder: '请选择',
       inputConfig: {
         widthPercent: 100,
       },
@@ -122,6 +136,7 @@ export const componentLibrary: ComponentItem[] = [
       type: 'date',
       name: 'date',
       label: '日期选择',
+      span: 24,
       inputConfig: {
         widthPercent: 100,
       },
@@ -137,6 +152,7 @@ export const componentLibrary: ComponentItem[] = [
       type: 'time',
       name: 'time',
       label: '时间选择',
+      span: 24,
       inputConfig: {
         widthPercent: 100,
       },
@@ -152,6 +168,7 @@ export const componentLibrary: ComponentItem[] = [
       type: 'rating',
       name: 'rating',
       label: '评分',
+      span: 24,
       ratingConfig: {
         max: 5,
         allowHalf: true,
@@ -345,14 +362,14 @@ export const componentLibrary: ComponentItem[] = [
   {
     id: 'cascader-address',
     type: 'cascader',
-    name: '省市区',
+    name: '地址',
     icon: '🏢',
     category: 'advanced',
     defaultConfig: {
       type: 'cascader',
       name: 'address',
-      label: '省市区',
-      placeholder: '请选择省市区',
+      label: '地址',
+      placeholder: '请选择地址',
       validation: {
         required: true,
       },

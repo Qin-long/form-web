@@ -157,7 +157,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                   style={{ marginBottom: 0 }}
                   rules={getAntdRules(field)}
                   validateTrigger={
-                    field.validation?.trigger === 'onInput'
+                    field.validation?.trigger === 'onChange'
                       ? 'onChange'
                       : field.validation?.trigger || 'onBlur'
                   }

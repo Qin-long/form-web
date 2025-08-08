@@ -5,8 +5,8 @@ export const cascaderOptions = [
     "label": "北京市",
     "children": [
       {
-        "value": "北京市",
-        "label": "北京市",
+        "value": "市辖区",
+        "label": "市辖区",
         "children": [
           {
             "value": "东城区",
@@ -81,8 +81,8 @@ export const cascaderOptions = [
     "label": "天津市",
     "children": [
       {
-        "value": "天津市",
-        "label": "天津市",
+        "value": "市辖区",
+        "label": "市辖区",
         "children": [
           {
             "value": "和平区",
@@ -3317,8 +3317,8 @@ export const cascaderOptions = [
     "label": "上海市",
     "children": [
       {
-        "value": "上海市",
-        "label": "上海市",
+        "value": "市辖区",
+        "label": "市辖区",
         "children": [
           {
             "value": "黄浦区",
@@ -9356,8 +9356,8 @@ export const cascaderOptions = [
     "label": "重庆市",
     "children": [
       {
-        "value": "重庆市",
-        "label": "重庆市",
+        "value": "市辖区",
+        "label": "市辖区",
         "children": [
           {
             "value": "万州区",

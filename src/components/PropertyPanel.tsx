@@ -33,7 +33,7 @@ const PRESET_OPTIONS_LABELS = [
   { label: '学历', value: 'education' },
   { label: '性别', value: 'gender' },
   { label: '省份', value: 'province' },
-  { label: '省市区', value: 'cascader' },
+  { label: '地址', value: 'cascader' },
   { label: '婚姻状况', value: 'maritalStatus' },
 ];
 
@@ -47,7 +47,7 @@ const PRESET_TYPE_LABELS: Record<PresetType, string> = {
   education: '学历',
   gender: '性别',
   province: '省份',
-  cascader: '省市区',
+  cascader: '地址',
   maritalStatus: '婚姻状况',
 };
 
@@ -85,6 +85,12 @@ const COMMON_VALIDATIONS = [
     value: 'age',
     pattern: '^(?:1[01][0-9]|120|[1-9]?[0-9])$',
     message: '请输入0-120之间的年龄',
+  },
+  {
+    label: '身份证',
+    value: 'idCard',
+    pattern: '^[1-9]\\d{5}(18|19|20)\\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$',
+    message: '请输入正确的身份证号',
   },
 ];
 
@@ -258,7 +264,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
         </Form.Item>
 
         {/* 文本域高度配置 */}
-        {selectedField.type === 'textarea' && (
+        {selectedField.type == 'textarea' && (
           <Form.Item label="高度" name="height">
             <InputNumber
               min={1}
@@ -278,12 +284,13 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
         </Form.Item>
         
         {/* 常用校验选择 */}
-        <Form.Item label="常用校验">
-          <Select
-            allowClear
-            placeholder="请选择常用校验"
-            value={selectedField?.validation?.custom || ''}
-            onChange={val => {
+        {(selectedField.type == 'input' || selectedField.type == 'textarea') && (
+          <Form.Item label="常用校验">
+            <Select
+              allowClear
+              placeholder="请选择常用校验"
+              value={selectedField?.validation?.custom || ''}
+              onChange={val => {
               const selected = COMMON_VALIDATIONS.find(item => item.value === val);
               if (selectedField && selected) {
                 if (selected.value) {
@@ -334,9 +341,10 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
             options={COMMON_VALIDATIONS}
           />
         </Form.Item>
+        )}
         
         {/* 字符长度配置（仅在未选择常用校验时显示） */}
-        {(!selectedField?.validation?.custom) && (
+        {((selectedField.type == 'input' || selectedField.type == 'textarea') && !selectedField?.validation?.custom) && (
           <>
             <Form.Item label="最小字符长度" name={['validation', 'min']}>
               <InputNumber min={0} style={{ width: '100%' }} placeholder="可输入的最少字符数" />
@@ -348,19 +356,23 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
         )}
         
         {/* 错误提示配置（始终可自定义） */}
-        <Form.Item label="错误提示" name={['validation', 'message']}>
-          <Input placeholder="自定义错误提示" />
-        </Form.Item>
+        {(selectedField.validation?.custom) && (
+          <Form.Item label="错误提示" name={['validation', 'message']}>
+            <Input placeholder="自定义错误提示" />
+          </Form.Item>
+        )}
         
         {/* 校验触发时机配置 */}
-        <Form.Item label="校验触发时机" name={['validation', 'trigger']} initialValue="onBlur">
-          <Select
+        {(selectedField.type == 'input' || selectedField.type == 'textarea') && (
+          <Form.Item label="校验触发时机" name={['validation', 'trigger']} initialValue="onBlur">
+            <Select
             options={[
               { label: '失焦时校验', value: 'onBlur' },
               { label: '输入时校验', value: 'onChange' },
             ]}
-          />
-        </Form.Item>
+            />
+          </Form.Item>
+        )}
 
         {/* 选项配置（仅对选择类组件显示） */}
         {(selectedField.type === 'radio' || selectedField.type === 'checkbox' || selectedField.type === 'select' || selectedField.type === 'cascader' ) && (

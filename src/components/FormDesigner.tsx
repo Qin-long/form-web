@@ -259,7 +259,11 @@ const FormDesigner: React.FC = () => {
       key: 'preview',
       label: '预览',
       children: (
-        <div style={{ padding: '20px' }}>
+        <div style={{ 
+          padding: '20px',
+          height: 'calc(100vh - 120px)',
+          overflow: 'auto'
+        }}>
           <DynamicForm
             config={{
               title: formTitle,

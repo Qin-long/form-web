@@ -121,19 +121,19 @@ const FormField: React.FC<FormFieldProps> = ({ field, value, onChange, onBlur, e
           ...commonProps,
           style: inputStyle,
         };
-        
+        console.log(field,'field');
         // 根据校验触发时机设置不同的事件处理
         if (trigger === 'onBlur') {
           // 失焦时触发校验，同时去除空格
           inputProps.onBlur = (e: React.FocusEvent<HTMLInputElement>) => onBlur?.(e.target.value.replace(/\s+/g, ''));
-        } else if (trigger === 'onInput') {
+        } else if (trigger === 'onChange') {
           // 输入时触发校验，同时去除空格
-          inputProps.onInput = (e: React.FormEvent<HTMLInputElement>) => onChange?.((e.target as HTMLInputElement).value.replace(/\s+/g, ''));
+          inputProps.onChange = (e: React.FormEvent<HTMLInputElement>) => onChange?.((e.target as HTMLInputElement).value.replace(/\s+/g, ''));
         } else {
           // 默认onChange触发校验，同时去除空格
-          inputProps.onChange = (e: React.ChangeEvent<HTMLInputElement>) => onChange?.(e.target.value.replace(/\s+/g, ''));
+          inputProps.onBlur = (e: React.ChangeEvent<HTMLInputElement>) => onBlur?.(e.target.value.replace(/\s+/g, ''));
         }
-        return <Input {...inputProps} />;
+        return <Input {...inputProps} minLength={field.validation?.min} maxLength={field.validation?.max} />;
       }
       
       case 'textarea': {
@@ -148,12 +148,12 @@ const FormField: React.FC<FormFieldProps> = ({ field, value, onChange, onBlur, e
         // 根据校验触发时机设置不同的事件处理
         if (trigger === 'onBlur') {
           inputProps.onBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => onBlur?.(e.target.value.replace(/\s+/g, ''));
-        } else if (trigger === 'onInput') {
-          inputProps.onInput = (e: React.FormEvent<HTMLTextAreaElement>) => onChange?.((e.target as HTMLTextAreaElement).value.replace(/\s+/g, ''));
+        } else if (trigger === 'onChange') {
+          inputProps.onChange = (e: React.FormEvent<HTMLTextAreaElement>) => onChange?.((e.target as HTMLTextAreaElement).value.replace(/\s+/g, ''));
         } else {
-          inputProps.onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => onChange?.(e.target.value.replace(/\s+/g, ''));
+          inputProps.onBlur = (e: React.ChangeEvent<HTMLTextAreaElement>) => onBlur?.(e.target.value.replace(/\s+/g, ''));
         }
-        return <Input.TextArea {...inputProps} />;
+        return <Input.TextArea {...inputProps} minLength={field.validation?.min} maxLength={field.validation?.max} />;
       }
 
       case 'radio':

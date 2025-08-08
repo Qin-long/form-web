@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { Card, Empty, Button } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
+import { Card, Empty, Button, Space } from 'antd';
+import { DeleteOutlined, ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
 import FormField from './FormField';
 import type { DesignerField } from '../types/designer';
 
@@ -52,6 +52,28 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const handleFieldDelete = (e: React.MouseEvent, fieldId: string) => {
     e.stopPropagation();
     onFieldDelete(fieldId);
+  };
+
+  /**
+   * 上移组件
+   * 将当前组件与上一个组件交换位置
+   */
+  const handleMoveUp = (e: React.MouseEvent, currentIndex: number) => {
+    e.stopPropagation();
+    if (currentIndex > 0) {
+      onSort(currentIndex, currentIndex - 1);
+    }
+  };
+
+  /**
+   * 下移组件
+   * 将当前组件与下一个组件交换位置
+   */
+  const handleMoveDown = (e: React.MouseEvent, currentIndex: number) => {
+    e.stopPropagation();
+    if (currentIndex < fields.length - 1) {
+      onSort(currentIndex, currentIndex + 1);
+    }
   };
 
   // 拖拽排序相关
@@ -176,13 +198,37 @@ const DesignCanvas: React.FC<DesignCanvasProps> = ({
                   <span style={{ fontSize: 14, color: '#333', fontWeight: 500 }}>
                     {field.label} (span: {span})
                   </span>
-                  <Button
-                    type="text"
-                    size="small"
-                    icon={<DeleteOutlined />}
-                    onClick={(e) => handleFieldDelete(e, field.id)}
-                    style={{ padding: '0 4px' }}
-                  />
+                  <Space size="small">
+                    {/* 上移按钮 */}
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<ArrowUpOutlined />}
+                      onClick={(e) => handleMoveUp(e, idx)}
+                      disabled={idx === 0}
+                      style={{ padding: '0 4px' }}
+                      title="上移"
+                    />
+                    {/* 下移按钮 */}
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<ArrowDownOutlined />}
+                      onClick={(e) => handleMoveDown(e, idx)}
+                      disabled={idx === fields.length - 1}
+                      style={{ padding: '0 4px' }}
+                      title="下移"
+                    />
+                    {/* 删除按钮 */}
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<DeleteOutlined />}
+                      onClick={(e) => handleFieldDelete(e, field.id)}
+                      style={{ padding: '0 4px' }}
+                      title="删除"
+                    />
+                  </Space>
                 </div>
                 <div style={{ width: '100%', flex: 1 }}>
                   <FormField
