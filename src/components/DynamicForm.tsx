@@ -43,19 +43,26 @@ function getAntdRules(field: any) {
     });
   }
   
-  // 最小字符长度校验（仅在未选择常用校验时生效）
-  if (!field.validation?.custom && field.validation?.min) {
+  // 最小字符长度校验
+  if (field.validation?.min) {
     rules.push({
       min: field.validation.min,
       message: field.validation?.message || `最少${field.validation.min}个字符`,
     });
   }
   
-  // 最大字符长度校验（仅在未选择常用校验时生效）
-  if (!field.validation?.custom && field.validation?.max) {
+  // 最大字符长度校验
+  if (field.validation?.max) {
     rules.push({
       max: field.validation.max,
       message: field.validation?.message || `最多${field.validation.max}个字符`,
+    });
+  }
+  
+  // 添加空格去除转换
+  if (field.type === 'input' || field.type === 'textarea') {
+    rules.push({
+      transform: (value: string) => value?.trim(),
     });
   }
   

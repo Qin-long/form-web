@@ -65,6 +65,9 @@ export const componentLibrary: ComponentItem[] = [
       inputConfig: {
         widthPercent: 100,
       },
+      validation: {
+        required: true,
+      },
     },
   },
   {
@@ -84,6 +87,9 @@ export const componentLibrary: ComponentItem[] = [
       ],
       inputConfig: {
         widthPercent: 100,
+      },
+      validation: {
+        required: true,
       },
     },
   },
@@ -107,6 +113,9 @@ export const componentLibrary: ComponentItem[] = [
       inputConfig: {
         widthPercent: 100,
       },
+      validation: {
+        required: true,
+      },
     },
   },
   {
@@ -124,6 +133,9 @@ export const componentLibrary: ComponentItem[] = [
       inputConfig: {
         widthPercent: 100,
       },
+      validation: {
+        required: true,
+      },
     },
   },
   {
@@ -140,6 +152,9 @@ export const componentLibrary: ComponentItem[] = [
       inputConfig: {
         widthPercent: 100,
       },
+      validation: {
+        required: true,
+      },
     },
   },
   {
@@ -155,6 +170,9 @@ export const componentLibrary: ComponentItem[] = [
       span: 24,
       inputConfig: {
         widthPercent: 100,
+      },
+      validation: {
+        required: true,
       },
     },
   },
@@ -176,6 +194,9 @@ export const componentLibrary: ComponentItem[] = [
       inputConfig: {
         widthPercent: 100,
       },
+      validation: {
+        required: true,
+      },
     },
   },
   {
@@ -195,6 +216,9 @@ export const componentLibrary: ComponentItem[] = [
       },
       inputConfig: {
         widthPercent: 100,
+      },
+      validation: {
+        required: true,
       },
     },
   },

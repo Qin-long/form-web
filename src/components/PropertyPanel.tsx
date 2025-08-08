@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Form, Input, InputNumber, Switch, Select, Divider } from 'antd';
+import { Card, Form, Input, InputNumber, Switch, Select, Divider, Slider } from 'antd';
 import type { DesignerField } from '../types/designer';
 import { ethnicityOptions, politicalOptions, educationOptions, genderOptions, provinceOptions, cascaderOptions, maritalStatusOptions } from '../data/options';
 
@@ -134,9 +134,13 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
         const currentValidation = selectedField.validation || {};
         const newValidation = { ...currentValidation, ...changedValues.validation };
         
-        // 如果修改的是message或trigger，保留现有的custom和pattern
-        if (changedValues.validation.message !== undefined || changedValues.validation.trigger !== undefined) {
-          // 保留现有的常用校验配置
+        // 如果修改的是message、trigger、required、min、max，保留现有的其他配置
+        if (changedValues.validation.message !== undefined || 
+            changedValues.validation.trigger !== undefined ||
+            changedValues.validation.required !== undefined ||
+            changedValues.validation.min !== undefined ||
+            changedValues.validation.max !== undefined) {
+          // 保留现有的其他校验配置
           onFieldUpdate(selectedField.id, {
             validation: newValidation
           });
@@ -243,25 +247,39 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
         <Divider orientation="left">布局设置</Divider>
 
         <Form.Item label="栅格占位（span）" name="span">
-          <InputNumber
+          <Slider
             min={1}
             max={24}
-            style={{ width: '100%' }}
-            placeholder="1-24列"
-            addonAfter="/ 24"
+            style={{ width: '90%' }}
+            tipFormatter={value => `${value} / 24`}
+            value={selectedField?.span || 24}
+            onChange={value => {
+              if (selectedField) {
+                onFieldUpdate(selectedField.id, { span: value });
+                form.setFieldsValue({ span: value });
+              }
+            }}
           />
         </Form.Item>
 
-        <Form.Item label="输入框宽度" name={['inputConfig', 'widthPercent']}>
-          <InputNumber
-            min={50}
-            max={100}
-            defaultValue={100}
-            style={{ width: '100%' }}
-            placeholder="组件宽度的百分比"
-            addonAfter="%"
+        {(selectedField.type == 'input' || selectedField.type == 'textarea') && (
+          <Form.Item label="输入框宽度" name={['inputConfig', 'widthPercent']}>
+            <Slider
+              min={50}
+              max={100}
+              defaultValue={100}
+              style={{ width: '90%' }}
+              tipFormatter={value => `${value}%`}
+            value={selectedField?.inputConfig?.widthPercent || 100}
+            onChange={value => {
+              if (selectedField) {
+                onFieldUpdate(selectedField.id, { inputConfig: { widthPercent: value } });
+                form.setFieldsValue({ inputConfig: { widthPercent: value } });
+              }
+            }}
           />
         </Form.Item>
+        )}
 
         {/* 文本域高度配置 */}
         {selectedField.type == 'textarea' && (
@@ -278,9 +296,9 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
         {/* 校验规则配置 */}
         <Divider orientation="left">校验规则</Divider>
         
-        {/* 必填校验，默认选中且禁用 */}
-        <Form.Item label="必填" name={['validation', 'required']} valuePropName="checked" initialValue={true}>
-          <Switch checked={true} disabled />
+        {/* 必填校验 */}
+        <Form.Item label="必填" name={['validation', 'required']} valuePropName="checked">
+          <Switch />
         </Form.Item>
         
         {/* 常用校验选择 */}
@@ -343,8 +361,8 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
         </Form.Item>
         )}
         
-        {/* 字符长度配置（仅在未选择常用校验时显示） */}
-        {((selectedField.type == 'input' || selectedField.type == 'textarea') && !selectedField?.validation?.custom) && (
+        {/* 字符长度配置 */}
+        {(selectedField.type == 'input' || selectedField.type == 'textarea') && !selectedField?.validation?.custom && (
           <>
             <Form.Item label="最小字符长度" name={['validation', 'min']}>
               <InputNumber min={0} style={{ width: '100%' }} placeholder="可输入的最少字符数" />
@@ -356,7 +374,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
         )}
         
         {/* 错误提示配置（始终可自定义） */}
-        {(selectedField.validation?.custom) && (
+        {(selectedField.type == 'input' || selectedField.type == 'textarea') && selectedField?.validation?.custom && (
           <Form.Item label="错误提示" name={['validation', 'message']}>
             <Input placeholder="自定义错误提示" />
           </Form.Item>
