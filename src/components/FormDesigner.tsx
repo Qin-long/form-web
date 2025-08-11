@@ -109,6 +109,14 @@ const FormDesigner: React.FC<FormDesignerProps> = ({
       width: component.defaultConfig.width || 300,
       height: component.defaultConfig.height || 32,
     };
+    
+    // 如果组件有预设选项，确保正确设置
+    if (component.defaultConfig.optionsPreset) {
+      newField.optionsPreset = component.defaultConfig.optionsPreset;
+      // 清空自定义选项，使用预设数据
+      newField.options = undefined;
+    }
+    
     setFields(prev => [...prev, newField]);
     setSelectedFieldId(newField.id);
   }, []);

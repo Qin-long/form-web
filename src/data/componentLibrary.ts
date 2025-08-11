@@ -202,17 +202,19 @@ export const componentLibrary: ComponentItem[] = [
   {
     id: 'upload',
     type: 'upload',
-    name: '图片上传',
+    name: '文件上传',
     icon: '📁',
     category: 'basic',
     defaultConfig: {
       type: 'upload',
       name: 'upload',
-      label: '图片上传',
+      label: '文件上传',
+      span: 24,
       uploadConfig: {
-        accept: 'image/*',
-        maxSize: 3,
+        accept: 'image/png,image/jpeg,image/jpg',
+        maxSize: 5, // 默认5MB，更合理的限制
         maxCount: 1,
+        fileType: 'image', // 新增：文件类型预设
       },
       inputConfig: {
         widthPercent: 100,
@@ -222,7 +224,6 @@ export const componentLibrary: ComponentItem[] = [
       },
     },
   },
-
   // 高级组件
   {
     id: 'input',
@@ -235,6 +236,7 @@ export const componentLibrary: ComponentItem[] = [
       name: 'input',
       label: '姓名',
       placeholder: '请输入姓名',
+      span: 24,
       validation: {
         required: true,
         custom: 'chinese_name',
@@ -247,16 +249,17 @@ export const componentLibrary: ComponentItem[] = [
     },
   },
   {
-    id: 'phone',
-    type: 'phone',
+    id: 'input',
+    type: 'input',
     name: '手机号',
     icon: '📱',
     category: 'advanced',
     defaultConfig: {
-      type: 'phone',
-      name: 'phone',
+      type: 'input',
+      name: 'input',
       label: '手机号',
       placeholder: '请输入手机号',
+      span: 24,
       validation: {
         required: true,
         custom: 'phone',
@@ -269,18 +272,20 @@ export const componentLibrary: ComponentItem[] = [
     },
   },
   {
-    id: 'idcard',
-    type: 'idcard',
+    id: 'input',
+    type: 'input',
     name: '身份证',
     icon: '🆔',
     category: 'advanced',
     defaultConfig: {
-      type: 'idcard',
-      name: 'idcard',
+      type: 'input',
+      name: 'input',
       label: '身份证号',
       placeholder: '请输入身份证号',
+      span: 24,
       validation: {
         required: true,
+        pattern: '^[1-9]\\d{5}[1-9]\\d{3}((0\\d)|(1[0-2]))(([0|1|2]\\d)|3[0-1])\\d{3}([0-9]|X)$',
         custom: 'idcard',
         message: '请输入正确的身份证号',
       },
@@ -290,18 +295,20 @@ export const componentLibrary: ComponentItem[] = [
     },
   },
   {
-    id: 'email',
+    id: 'input',
     type: 'input',
     name: '邮箱',
     icon: '📧',
     category: 'advanced',
     defaultConfig: {
       type: 'input',
-      name: 'email',
+      name: 'input',
       label: '邮箱',
       placeholder: '请输入邮箱',
+      span: 24,
       validation: {
         required: true,
+        pattern: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$',
         custom: 'email',
         message: '请输入正确的邮箱格式',
       },
@@ -311,18 +318,20 @@ export const componentLibrary: ComponentItem[] = [
     },
   },
   {
-    id: 'age',
-    type: 'age',
+    id: 'input',
+    type: 'input',
     name: '年龄',
     icon: '🎂',
     category: 'advanced',
     defaultConfig: {
-      type: 'age',
-      name: 'age',
+      type: 'input',
+      name: 'input',
       label: '年龄',
       placeholder: '请输入年龄',
+      span: 24,
       validation: {
         required: true,
+        pattern: '^[0-9]{1,3}$',
         custom: 'age',
         message: '请输入有效年龄（0-150）',
       },
@@ -341,6 +350,7 @@ export const componentLibrary: ComponentItem[] = [
       type: 'province',
       name: 'province',
       label: '所在省份',
+      span: 24,
       validation: {
         required: true,
       },
@@ -359,6 +369,7 @@ export const componentLibrary: ComponentItem[] = [
       type: 'ethnicity',
       name: 'ethnicity',
       label: '民族',
+      span: 24,
       validation: {
         required: true,
       },
@@ -377,6 +388,7 @@ export const componentLibrary: ComponentItem[] = [
       type: 'political',
       name: 'political',
       label: '政治面貌',
+      span: 24,
       validation: {
         required: true,
       },
@@ -392,16 +404,18 @@ export const componentLibrary: ComponentItem[] = [
     icon: '🏢',
     category: 'advanced',
     defaultConfig: {
-      type: 'cascader',
-      name: 'address',
       label: '地址',
+      type: 'cascader',
+      name: 'cascader',
       placeholder: '请选择地址',
+      span: 24,
       validation: {
         required: true,
       },
       inputConfig: {
         widthPercent: 100,
       },
+      optionsPreset: 'cascader', // 添加地址预设
     },
   },
 ];

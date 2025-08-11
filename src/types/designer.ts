@@ -21,6 +21,7 @@ export interface UploadConfig {
   accept?: string;
   maxSize?: number;
   maxCount?: number;
+  fileType?: 'image' | 'document'; // 新增：文件类型预设
 }
 
 export interface DesignerField {

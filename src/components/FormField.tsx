@@ -11,10 +11,13 @@ import {
   Form,
   Space,
   Cascader,
+  message,
 } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import type { FormField as FormFieldType } from '../types/form';
 import { ethnicityOptions, politicalOptions, educationOptions, genderOptions, provinceOptions, cascaderOptions, maritalStatusOptions } from '../data/options';
+import { getFileTypeConfig } from '../config/uploadConfig';
+import { validateUploadFile } from '../utils/fileValidation';
 import { z } from 'zod';
 
 /**
@@ -243,17 +246,127 @@ const FormField: React.FC<FormFieldProps> = ({ field, value, onChange, onBlur, e
 
       case 'upload':
         // 文件上传组件
+        const fileType = field.uploadConfig?.fileType || 'image';
+        const fileConfig = getFileTypeConfig(fileType);
+        const isImage = fileType === 'image';
+        
+        // 文件上传前验证
+        const beforeUpload = (file: File) => {
+          const maxSize = field.uploadConfig?.maxSize || fileConfig.maxSize;
+          const maxCount = field.uploadConfig?.maxCount || fileConfig.maxCount;
+          
+          console.log('文件验证开始:', {
+            fileName: file.name,
+            fileSize: file.size,
+            fileSizeMB: (file.size / (1024 * 1024)).toFixed(2),
+            maxSize,
+            fileType,
+            allowedExtensions: fileConfig.allowedExtensions
+          });
+          
+          // 使用验证工具函数
+          const validation = validateUploadFile(file, fileType, maxSize, maxCount);
+          
+          console.log('验证结果:', validation);
+          
+          if (!validation.valid) {
+            message.error(validation.message || '文件验证失败');
+            return Upload.LIST_IGNORE; // 阻止不符合要求的文件被添加到文件列表
+          }
+          
+          // 验证通过，允许文件被选择
+          console.log('文件验证通过，允许选择');
+          
+          // 手动添加文件到列表
+          const newFile = {
+            uid: `${Date.now()}_${Math.random()}`,
+            name: file.name,
+            status: 'done',
+            originFileObj: file,
+          };
+          
+          // 更新文件列表
+          const currentFileList = value || [];
+          const updatedFileList = [...currentFileList, newFile];
+          onChange?.(updatedFileList);
+          
+          return false; // 阻止默认行为，我们已经手动处理了
+        };
+        
         return (
           <Upload
             {...commonProps}
-            accept={field.uploadConfig?.accept || 'image/*'}
-            maxCount={field.uploadConfig?.maxCount || 1}
-            beforeUpload={() => false} // 阻止自动上传，仅用于文件选择
-            listType="picture-card"
+            accept={field.uploadConfig?.accept || fileConfig.accept}
+            maxCount={field.uploadConfig?.maxCount || fileConfig.maxCount}
+            beforeUpload={beforeUpload}
+            fileList={value || []} // 控制文件列表
+            onChange={(info) => {
+              // 处理文件列表变化
+              console.log('文件列表变化:', info);
+              
+              // 更新文件状态
+              const updatedFileList = info.fileList.map(file => ({
+                ...file,
+                status: 'done', // 设置文件状态为已完成
+                uid: file.uid || `${Date.now()}_${Math.random()}`, // 确保有唯一ID
+              }));
+              
+              onChange?.(updatedFileList);
+            }}
+            onRemove={(file) => {
+              // 处理文件移除
+              console.log('移除文件:', file);
+              const currentFileList = value || [];
+              const updatedFileList = currentFileList.filter((f: any) => f.uid !== file.uid);
+              onChange?.(updatedFileList);
+              return true; // 允许移除
+            }}
+            onPreview={(file) => {
+              // 处理文件预览
+              console.log('预览文件:', file);
+              if (file.originFileObj) {
+                const url = URL.createObjectURL(file.originFileObj);
+                window.open(url);
+              }
+            }}
+            listType={isImage ? "picture-card" : "text"}
+            style={{ width: '100%' }}
+            customRequest={() => {}} // 阻止自动上传
+            showUploadList={{ showPreviewIcon: true, showRemoveIcon: true }} // 显示文件列表
           >
-            <div>
-              <UploadOutlined />
-              <div style={{ marginTop: 8 }}>上传图片</div>
+            <div style={{ 
+              padding: '20px', 
+              textAlign: 'center',
+              border: '1px dashed #d9d9d9',
+              borderRadius: '6px',
+              backgroundColor: '#fafafa',
+              cursor: 'pointer',
+              transition: 'border-color 0.3s'
+            }}>
+              <UploadOutlined style={{ fontSize: '32px', color: '#999', marginBottom: '8px' }} />
+              <div style={{ 
+                fontSize: '16px', 
+                color: '#666', 
+                marginBottom: '8px',
+                fontWeight: '500'
+              }}>
+                {isImage ? '上传图片' : '上传文档'}
+              </div>
+              <div style={{ 
+                fontSize: '14px', 
+                color: '#999', 
+                marginBottom: '4px',
+                lineHeight: '1.4'
+              }}>
+                {isImage ? '支持 PNG/JPEG/JPG' : '支持 PDF/Word/Excel'}
+              </div>
+              <div style={{ 
+                fontSize: '12px', 
+                color: '#ccc',
+                lineHeight: '1.4'
+              }}>
+                最大 {field.uploadConfig?.maxSize || fileConfig.maxSize}MB
+              </div>
             </div>
           </Upload>
         );

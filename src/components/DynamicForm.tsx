@@ -29,7 +29,7 @@ const CANVAS_MAX_WIDTH = 960;
 function getAntdRules(field: any) {
   const rules = [];
   
-  // 必填校验
+  // 必填校验-
   if (field.validation?.required) {
     // 根据组件类型设置不同的必填提示
     let defaultMessage = `${field.label}为必填项`;

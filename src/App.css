@@ -111,7 +111,12 @@ html, body, #root {
 .ant-card-body {
   padding: 24px;
 }
-
+:where(.css-dev-only-do-not-override-1vjf2v5).ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload.ant-upload-select >.ant-upload{
+  justify-content: space-between;
+}
+:where(.css-dev-only-do-not-override-1vjf2v5).ant-upload-wrapper.ant-upload-picture-card-wrapper .ant-upload.ant-upload-select{
+  height: auto;
+}
 /* 上传组件样式 */
 .ant-upload-list-picture-card .ant-upload-list-item {
   border-radius: 6px;

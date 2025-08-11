@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, Form, Input, InputNumber, Switch, Select, Divider, Slider } from 'antd';
 import type { DesignerField } from '../types/designer';
 import { ethnicityOptions, politicalOptions, educationOptions, genderOptions, provinceOptions, cascaderOptions, maritalStatusOptions } from '../data/options';
+import { getFileTypeConfig } from '../config/uploadConfig';
 
 /**
  * 预设选项类型定义
@@ -63,7 +64,7 @@ const COMMON_VALIDATIONS = [
     message: '',
   },
   {
-    label: '姓名（只支持中文）',
+    label: '姓名',
     value: 'chinese_name',
     pattern: '^[\u4e00-\u9fa5]{2,4}$',
     message: '请输入2-4位中文姓名',
@@ -117,11 +118,29 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
    */
   React.useEffect(() => {
     if (selectedField) {
+      // 重置表单数据
+      form.resetFields();
+      // 设置新的字段数据
       form.setFieldsValue(selectedField);
+      
+      // 根据字段的optionsPreset设置选项来源和预设类型
+      if (selectedField.optionsPreset) {
+        setOptionSource('preset');
+        setPresetType(selectedField.optionsPreset as PresetType);
+      } else if (selectedField.options && selectedField.options.length > 0) {
+        setOptionSource('custom');
+        setPresetType(undefined);
+      } else {
+        // 默认状态
+        setOptionSource('custom');
+        setPresetType(undefined);
+      }
     } else {
       form.resetFields();
+      setOptionSource('custom');
+      setPresetType(undefined);
     }
-  }, [selectedField?.id]);
+  }, [selectedField?.id, form]);
 
   /**
    * 处理表单值变化
@@ -163,7 +182,26 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
     setOptionSource(val);
     if (val === 'custom') {
       setPresetType(undefined);
-      // 不自动清空options，保留自定义
+      // 清空预设选项，保留自定义选项
+      if (selectedField) {
+        onFieldUpdate(selectedField.id, {
+          optionsPreset: undefined,
+          // 不清空options，保留自定义选项
+        });
+        form.setFieldsValue({
+          optionsPreset: undefined,
+        });
+      }
+    } else if (val === 'preset') {
+      // 切换到预设选项时，清空自定义选项
+      if (selectedField) {
+        onFieldUpdate(selectedField.id, {
+          options: undefined,
+        });
+        form.setFieldsValue({
+          options: undefined,
+        });
+      }
     }
   };
 
@@ -181,6 +219,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
         label: presetLabel,
         name: val
       });
+      // 更新表单显示
       form.setFieldsValue({
         optionsPreset: val,
         options: undefined,
@@ -321,7 +360,8 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
               const selected = COMMON_VALIDATIONS.find(item => item.value === val);
               if (selectedField && selected) {
                 if (selected.value) {
-                  // 选择常用校验，自动填充 pattern、message、custom
+                  // 选择常用校验，自动填充 pattern、message、custom 和 label
+                  const newLabel = selected.label === '无' ? selectedField.label : selected.label;
                   onFieldUpdate(selectedField.id, {
                     validation: {
                       ...selectedField.validation,
@@ -331,6 +371,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
                       max: undefined,
                       message: selected.message,
                     },
+                    label: newLabel, // 自动更新标签
                   });
                   form.setFieldsValue({
                     validation: {
@@ -341,9 +382,11 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
                       max: undefined,
                       message: selected.message,
                     },
+                    label: newLabel, // 自动更新标签
                   });
                 } else {
-                  // 选择"无"，清除 pattern/custom
+                  // 选择"无"，清除 pattern/custom，恢复原始标签
+                  const originalLabel = selectedField.label || '输入框';
                   onFieldUpdate(selectedField.id, {
                     validation: {
                       ...selectedField.validation,
@@ -352,6 +395,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
                       min: undefined,
                       max: undefined,
                     },
+                    label: originalLabel, // 恢复原始标签
                   });
                   form.setFieldsValue({
                     validation: {
@@ -361,6 +405,7 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
                       min: undefined,
                       max: undefined,
                     },
+                    label: originalLabel, // 恢复原始标签
                   });
                 }
               }
@@ -405,6 +450,21 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
         {(selectedField.type === 'radio' || selectedField.type === 'checkbox' || selectedField.type === 'select' || selectedField.type === 'cascader' ) && (
           <>
             <Divider orientation="left">选项配置</Divider>
+            
+            {/* 调试信息 */}
+            <div style={{ 
+              padding: '8px 12px', 
+              background: '#f5f5f5', 
+              borderRadius: '4px', 
+              fontSize: '12px', 
+              color: '#666',
+              marginBottom: '12px'
+            }}>
+              <div>当前选项来源: {optionSource}</div>
+              <div>当前预设类型: {presetType || '无'}</div>
+              <div>字段预设类型: {selectedField.optionsPreset || '无'}</div>
+            </div>
+            
             <Form.Item label="选项来源">
               <Select
                 value={optionSource}
@@ -447,14 +507,81 @@ const PropertyPanel: React.FC<PropertyPanelProps> = ({ selectedField, onFieldUpd
         {selectedField.type === 'upload' && (
           <>
             <Divider orientation="left">上传配置</Divider>
+            
+            {/* 文件类型选择 */}
+            <Form.Item label="文件类型" name={['uploadConfig', 'fileType']}>
+              <Select
+                placeholder="请选择文件类型"
+                options={[
+                  { label: '图片文件', value: 'image' },
+                  { label: '文档文件', value: 'document' },
+                ]}
+                onChange={(value) => {
+                  if (selectedField) {
+                    const fileConfig = getFileTypeConfig(value);
+                    
+                    onFieldUpdate(selectedField.id, {
+                      uploadConfig: {
+                        ...selectedField.uploadConfig,
+                        fileType: value,
+                        accept: fileConfig.accept,
+                        maxSize: fileConfig.maxSize,
+                        maxCount: fileConfig.maxCount,
+                      }
+                    });
+                    
+                    form.setFieldsValue({
+                      uploadConfig: {
+                        ...selectedField.uploadConfig,
+                        fileType: value,
+                        accept: fileConfig.accept,
+                        maxSize: fileConfig.maxSize,
+                        maxCount: fileConfig.maxCount,
+                      }
+                    });
+                  }
+                }}
+              />
+            </Form.Item>
+            
             <Form.Item label="接受文件类型" name={['uploadConfig', 'accept']}>
               <Input placeholder="如: image/*" />
             </Form.Item>
             <Form.Item label="最大文件大小(MB)" name={['uploadConfig', 'maxSize']}>
-              <InputNumber min={1} style={{ width: '100%' }} />
+              <InputNumber 
+                min={1} 
+                max={selectedField.uploadConfig?.fileType === 'document' ? 100 : 50} 
+                style={{ width: '100%' }} 
+                placeholder="请输入最大文件大小"
+                onChange={(value) => {
+                  if (selectedField && value) {
+                    onFieldUpdate(selectedField.id, {
+                      uploadConfig: {
+                        ...selectedField.uploadConfig,
+                        maxSize: value
+                      }
+                    });
+                  }
+                }}
+              />
             </Form.Item>
             <Form.Item label="最大上传数量" name={['uploadConfig', 'maxCount']}>
-              <InputNumber min={1} style={{ width: '100%' }} />
+              <InputNumber 
+                min={1} 
+                max={selectedField.uploadConfig?.fileType === 'image' ? 10 : 5} 
+                style={{ width: '100%' }} 
+                placeholder="请输入最大上传数量"
+                onChange={(value) => {
+                  if (selectedField && value) {
+                    onFieldUpdate(selectedField.id, {
+                      uploadConfig: {
+                        ...selectedField.uploadConfig,
+                        maxCount: value
+                      }
+                    });
+                  }
+                }}
+              />
             </Form.Item>
           </>
         )}
